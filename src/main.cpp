@@ -52,30 +52,31 @@ void calibrationRene() {
 
 
 void setup() {
+  Serial.begin(115200);
   pinMode(CALIB_BUTTON, INPUT);
   pinMode(RedLED, OUTPUT);  
   pinMode(BlueLED, OUTPUT);  
   pinMode(GreenLED, OUTPUT);
-  if(!digitalRead(CALIB_BUTTON)){
-    calibrationRene();
-  }
-
+  
   OPI_UART.begin(OPI_BAUD);  
 
-  servo1.begin(); servo1.setBaudRate(38400); servo1.setMode(OCS_SERVO); servo1.setMaxTorque(500);
+  servo1.begin(); servo1.setBaudRate(38400); servo1.setMode(OCS_SERVO); servo1.setMaxTorque(300);
   delay(200);
-  servo2.begin(); servo2.setBaudRate(38400); servo2.setMode(OCS_SERVO); servo2.setMaxTorque(200);
+  servo2.begin(); servo2.setBaudRate(38400); servo2.setMode(OCS_SERVO); servo2.setMaxTorque(300);
   delay(200);
-  servo3.begin(); servo3.setBaudRate(38400); servo3.setMode(OCS_SERVO); servo3.setMaxTorque(200);
+  servo3.begin(); servo3.setBaudRate(38400); servo3.setMode(OCS_SERVO); servo3.setMaxTorque(300);
   delay(200);
-  servo4.begin(); servo4.setBaudRate(38400); servo4.setMode(OCS_SERVO); servo4.setMaxTorque(200);
+  servo4.begin(); servo4.setBaudRate(38400); servo4.setMode(OCS_SERVO); servo4.setMaxTorque(300);
   delay(200);
 
+
+  // calibrationRene();
+  OPI_UART.println("[INFO]  Start complete");
+  servo1.setGoalAngle(180);
 }
 
-
-void loop() {
-  if (OPI_UART.available() == 0) {
+void analyzeCors_MoveServo(){
+if (OPI_UART.available() == 0) {
     return;
   }
   delay(100);
@@ -118,6 +119,70 @@ void loop() {
   moveServos();
 }
 
+void TestMoveOnCors(){
+  if (OPI_UART.available() == 0) return;
+  delay(50);
+
+  // читаем координаты
+  Coors coors = readUART();
+  if (areCoorsInvalid(coors)) return;
+
+  // считаем углы для X, Y, Z
+  calculateAngles(coors.x, coors.y, coors.z);
+
+  // применяем рассчитанные углы
+  moveServos();
+
+
+}
+
+void TestMoveServo(){
+  servoAngles[0] = 150;
+  servoAngles[1] = 40;
+  servoAngles[2] = 100;
+  servoAngles[3] = 20;
+  moveServos();
+
+  delay(2000);
+
+  servoAngles[0] = 90;
+  servoAngles[1] = 100;
+  servoAngles[2] = 60;
+  servoAngles[3] = 120;
+  moveServos();
+
+  
+  delay(2000);
+}
+
+void loop() {
+  TestMoveOnCors();
+
+  //servo3.setGoalAngle(360);
+  // servo2.setGoalAngle(180);
+  // servo3.setGoalAngle(180);
+
+  // OPI_UART.print("L0:");
+  // OPI_UART.print(servo1.getCurrentPosition());
+  // OPI_UART.print("   L1:");
+  // OPI_UART.print(servo2.getCurrentPosition());
+  // OPI_UART.print("   L3:");
+  // OPI_UART.println(servo3.getCurrentPosition());
+
+
+  delay(100);
+  // OPI_UART.print("L0:");
+  // OPI_UART.print(servo1.getCurrentPosition());
+  // OPI_UART.print("   L1:");
+  // OPI_UART.print(servo2.getCurrentPosition());
+  // OPI_UART.print("   L3:");
+  // OPI_UART.println(servo3.getCurrentPosition());
+  // int pos = servo1.getCurrentPosition();
+  // if (pos == -1) {digitalWrite(RedLED, HIGH); digitalWrite(BlueLED, LOW);}
+  // else {digitalWrite(RedLED, LOW); digitalWrite(BlueLED, HIGH);}
+
+}
+
   //######## Тест серво + комуникация ########
   // servo1.setGoalAngle(posX);
   // delay(200);
@@ -134,3 +199,6 @@ void loop() {
   // }
   
 
+  // OPI_UART.print("[INFO] Base="); OPI_UART.print(servoAngles[0]);
+  // OPI_UART.print("  Joint1="); OPI_UART.print(servoAngles[1]);
+  // OPI_UART.print("  Joint2="); OPI_UART.println(servoAngles[2]);

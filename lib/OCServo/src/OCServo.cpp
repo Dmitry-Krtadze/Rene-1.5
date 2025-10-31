@@ -1,4 +1,5 @@
 #include "OCServo.h"
+// HardwareSerial OPI_UARTt(PA3, PA2);
 
 /* CONSTRUCTORS */
 OCServo::OCServo(byte id, SoftwareSerial *serialPort) : id(id), serial(serialPort){
@@ -113,16 +114,22 @@ OCSResponse OCServo::readResponse() {
     int i = 0;
 
     unsigned long last_check_time = millis();
+    // OPI_UARTt.println("Gotta go fast");
     while(true) {
         if(serial->available() > 0) {
             response[i] = serial->read();
             i++;
             last_check_time = millis();
+            // OPI_UARTt.println("Got smthng");
         }
-        else if(millis() > last_check_time + 4) {
+        else if(millis() > last_check_time + 7) {
+            // OPI_UARTt.println("Nah, timeout");
             break;
         }
     }
+
+    // for (int x = 0; x < 23; x++) Serial.print(response[x]);
+    // Serial.println();
 
     OCSResponse result = this->bytesToResponse(response, i);
     return result;
@@ -477,6 +484,7 @@ void OCServo::begin(long baudrate/*=1000000*/) {
             static_cast<SoftwareSerial*>(serial)->begin(baudrate);
             break;
     }
+    // OPI_UARTt.begin(115200);
 }
 
 void OCServo::printResponse(OCSResponse response) {
@@ -507,6 +515,8 @@ void OCServo::printResponse(OCSResponse response) {
 
 int OCServo::getCurrentPosition() {
     OCSResponse response = this->ocsRead(OCS_CURRENT_POSITION, 2);
+
+    // this->printResponse(response);
     if (response.numberOfParameters != 2) {
         return -1;
     }

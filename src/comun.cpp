@@ -21,7 +21,7 @@ void parseCoordinates(const String &data) {
   grip = sg.toInt();
 
 
-  String reply = "OK:";
+  String reply = "[INFO] CordsFromOrange:";
   reply += posX;
   reply += ",";
   reply += posY;
@@ -33,13 +33,11 @@ void parseCoordinates(const String &data) {
   OPI_UART.println(reply);
 }
 
-
 Coors readUART() {
-  // читаем строку до '\n'
   while (OPI_UART.available()) {
     char c = OPI_UART.read();
     if (c == '\n') {
-      parseCoordinates(inputBuffer); // обновит posX, posY, posZ и grip
+      parseCoordinates(inputBuffer);
       inputBuffer = "";
       break;
     } else {
@@ -47,11 +45,12 @@ Coors readUART() {
     }
   }
 
-  // конвертируем принятые координаты в структуру Coors
   return Coors{
     posX,
     posY,
-    posX,  // можно заменить на finishX при реальной команде
-    posY   // можно заменить на finishY
+    posZ,  
+    posX,   
+    posY,   
+    posZ   
   };
 }

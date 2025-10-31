@@ -1,74 +1,76 @@
 #include "config.h"
 #include "mathCalc.h"
+#include <math.h>
 
+static inline float rad2deg(float r) { return r * 180.0f / M_PI; }
+static inline float clamp1(float v) { return v < -1.0f ? -1.0f : (v > 1.0f ? 1.0f : v); }
+static inline float norm360(float a) { while(a < 0) a += 360.0f; while(a >= 360.0f) a -= 360.0f; return a; }
+
+
+int calculateBaseAngle(float x, float z) {
+   
+}
 
 void calculateAngles(float x, float y, float z) {
-  if (x > 40) { x += 10; y += 10; }
-  if (x < -40) { x += 10;}
-  if (x < 0 && y < 120 && y > 100) {x += 5; y -= 5; }
-  int angle1 = calculateBaseAnlge(x, y);
+  const float L0  = BASE_HEIGHT;
+  const float L1  = L1_LENGTH;
+  const float L2  = L2_LENGTH;
+  const float div = 1.0f;
 
-  float h = BASE_HEIGHT;
-  float l1 = L1_LENGTH;
-  float l2 = L2_LENGTH;
+  float Xpos    = x;
+  float YposWL0 = y;
 
-  bool underTheBase = z < h;
-  z = abs(h - z);
-  float d = sqrt(x * x + y * y);
-  
-  float rd = sqrt(d * d + z * z);
+  float Ypos = L0 - YposWL0;  // Высота, как было
+  float d = sqrtf(Xpos * Xpos + Ypos * Ypos) / div;  // Оставляем без z, как вы просили
 
-  int angle2 = calculateFirstShoulderAngle(z, d, rd, l1, l2, underTheBase);
-  int angle3 = calculateSecondShoulderAngle(rd, l1, l2);
-
-  if (y > 255) { angle2 -= 5; angle3 += 13; }
-  else if (y > 215) angle3 += 6;
-  else if (y > 160) angle3 += 2;
-  else if (y < 90) angle3 -= 5;
-
-  if (y < 112 && x > -60 && x < 60) {angle3 += 3;}
-
-
-  servoAngles[0] = angle1;
-  servoAngles[1] = angle2 + ANGLE_2_SHIFT;
-  servoAngles[2] = angle3 + ANGLE_3_SHIFT;
-}
-
-int calculateBaseAnlge(float x, float y) {
-  return BASE_ANGLE_1 + round(atan(x / y) * 180 / M_PI);
-}
-
-int calculateFirstShoulderAngle(float z, float d, float rd, float l1, float l2, bool underTheBase) {
-  float heightAngle = atan(z / d) * 180 / M_PI;
-  float result = acos((l1 * l1 + rd * rd - l2 * l2) / (2 * l1 * rd)) * 180 / M_PI;
-  return underTheBase ? result - heightAngle : result + heightAngle;
-}
-
-int calculateSecondShoulderAngle(float rd, float l1, float l2) {
-  return acos((l1 * l1 + l2 * l2 - rd * rd) / (2 * l1 * l2)) * 180 / M_PI;
-}
-
-bool areCoorsInvalid(Coors coors) {
-  return (coors.x == 0 && coors.y == 0) || (coors.y < 30 || coors.finishY < 30);
-}
-
-bool areCoorsFixed(Coors coors, Coors prevCoors) {
-  return (coors.finishX <= prevCoors.finishX + 1 && coors.finishX >= prevCoors.finishX - 1) && (coors.finishY <= prevCoors.finishY + 1 && coors.finishY >= prevCoors.finishY - 1) && (coors.x <= prevCoors.x + 1 && coors.x >= prevCoors.x - 1) && (coors.y <= prevCoors.y + 1 && coors.y >= prevCoors.y - 1);
-}
-
-bool areServoAnglesCanBeCalculated(Coors coors) {
-  bool valid = true;
-  calculateAngles(coors.x, coors.y, CUBE_HEIGHT);
-  for (int i = 0; i < 4; i++) {
-    if (isnan(servoAngles[i]) || servoAngles[i] == 0) {
-      valid = false;
-    }
+  if (!isfinite(d) || d < 1e-6f) {
+    OPI_UART.println("[ERROR] skip: d≈0");
+    return;
   }
-  calculateAngles(coors.finishX, coors.finishY, CUP_HEIGHT);
-  for (int i = 0; i < 4; i++) {
-    if (isnan(servoAngles[i]) || servoAngles[i] == 0) {
-      valid = false;
-    }
+
+  float q1 = atan2f(Ypos, Xpos);  // Угол в плоскости XY
+
+  auto clamp1 = [](float v) {
+    return (v < -1.0f) ? -1.0f : (v > 1.0f ? 1.0f : v);
+  };
+
+  float arg2 = clamp1((d*d + L1*L1 - L2*L2) / (2.0f * L1 * d));
+  float arg3 = clamp1((L1*L1 + L2*L2 - d*d) / (2.0f * L1 * L2));
+  float q2 = acosf(arg2);
+  float q3 = acosf(arg3);
+  if (!isfinite(q2) || !isfinite(q3)) {
+    OPI_UART.println("[ERROR] skip: acos NaN");
+    return;
   }
-  return valid;
+
+  float a1_deg = ((q1 - q2) * 180.0f / M_PI) * -1;
+  float a2_deg = 180.0f - (q3 * 180.0f / M_PI);
+
+  if (fabsf(a1_deg) < 1e-5f && fabsf(a2_deg) < 1e-5f) {
+    OPI_UART.println("[ERROR] skip: angles≈0");
+    return;
+  }
+
+  servoAngles[0] = calculateBaseAngle(x, z);  // Z влияет на поворот базы
+  servoAngles[1] = a1_deg * 2;
+  servoAngles[2] = a2_deg * 2;
+
+  OPI_UART.print("[INFO] J0=");
+  OPI_UART.print(servoAngles[0]);
+  OPI_UART.print("  J1=");    
+  OPI_UART.print(servoAngles[1]);
+  OPI_UART.print("  J2=");    
+  OPI_UART.println(servoAngles[2]);
+}
+
+bool areCoorsInvalid(Coors c) {
+  return isnan(c.x) || isnan(c.y);
+}
+
+bool areServoAnglesCanBeCalculated(Coors c) {
+  calculateAngles(c.x, c.y, c.z);
+  for (int i = 1; i <= 2; ++i) {    
+    if (isnan(servoAngles[i])) return false;
+  }
+  return true;
 }

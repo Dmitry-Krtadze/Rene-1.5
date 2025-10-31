@@ -2,35 +2,28 @@
 #include "movementServo.h"
 
 void moveServos() {
-  change = true;
-
-  for (int j = 0; j < 180; j++) {
-    changeServo(0);
-    changeServo(1);
-    changeServo(2);
-    changeServo(3);
-
-    if (!change)
-      break;
-
-    change = false;
-    delay(15);
-  }
+  servo1.setGoalAngle(servoAngles[0]);
+  servo2.setGoalAngle(servoAngles[1]);
+  servo3.setGoalAngle(servoAngles[2]);
+  
 }
 
+
 void changeServo(int servoNum) {
+  static const float dir[4] = { SERVO1_DIR, SERVO2_DIR, SERVO3_DIR, SERVO4_DIR };
+
   if (currentAngles[servoNum] > servoAngles[servoNum]) {
     int spd = (currentAngles[servoNum] - servoAngles[servoNum]) / 20;
     if (spd == 0) spd = 1;
     currentAngles[servoNum] -= spd;
-    servos[servoNum]->setGoalAngle(currentAngles[servoNum]);
+    servos[servoNum]->setGoalAngle(currentAngles[servoNum] * dir[servoNum]);
     change = true;
   }
   else if (currentAngles[servoNum] < servoAngles[servoNum]) {
     int spd = (servoAngles[servoNum] - currentAngles[servoNum]) / 20;
     if (spd == 0) spd = 1;
     currentAngles[servoNum] += spd;
-    servos[servoNum]->setGoalAngle(currentAngles[servoNum]);
+    servos[servoNum]->setGoalAngle(currentAngles[servoNum] * dir[servoNum]);
     change = true;
   }
 }

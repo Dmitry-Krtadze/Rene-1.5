@@ -1,6 +1,6 @@
 #include "config.h"
 
-byte id1 = 0x05;
+byte id1 = 0x01;
 byte id2 = 0x02;
 byte id3 = 0x03;
 byte id4 = 0x04;
@@ -12,6 +12,7 @@ OCServo servo4(id4, &Serial1);
 OCServo* servos[4] = { &servo1, &servo2, &servo3, &servo4 };
 
 HardwareSerial OPI_UART(PA3, PA2);
+
 
 float posX = 90, posY = 90, posZ = 90;
 int grip = 0;

@@ -4,12 +4,14 @@
 #include <Arduino.h>
 #include <OCServo.h>
 
-// -------- STRUCTS (перенесено вверх!) ----------
+
 typedef struct {
   float x;
   float y;
+  float z;
   float finishX;
   float finishY;
+  float finishZ;
 } Coors;
 
 // -------- SERVO IDS ----------
@@ -33,11 +35,19 @@ extern HardwareSerial OPI_UART;
 extern float posX, posY, posZ;
 extern int grip;
 extern String inputBuffer;
-extern Coors prevCoors;        // теперь тип уже известен
+extern Coors prevCoors;      
 extern int servoAngles[4];
 extern int currentAngles[4];
 extern int servs[4];
 extern bool change;
+
+// -------- adapt to OCServo ----------
+#define SERVO_SCALE 2.0f  
+#define SERVO1_DIR  1
+#define SERVO2_DIR  1   
+#define SERVO3_DIR  1
+#define SERVO4_DIR  1
+
 
 // -------- CONSTANTS ----------
 #define CALIB_BUTTON PB5
@@ -45,7 +55,7 @@ extern bool change;
 #define GreenLED PB7
 #define BlueLED PB4
 
-#define BASE_ANGLE_1 180
+#define BASE_ANGLE_1 90
 #define BASE_ANGLE_2 20
 #define BASE_ANGLE_3 20
 #define BASE_ANGLE_4 20
@@ -55,9 +65,9 @@ extern bool change;
 
 #define CUBE_HEIGHT 20
 #define CUP_HEIGHT 120
-#define BASE_HEIGHT 83
-#define L1_LENGTH 125
-#define L2_LENGTH 140
+#define BASE_HEIGHT 84
+#define L1_LENGTH 127
+#define L2_LENGTH 190
 
 #define CAMERA_X_KOEF 1.23
 #define CAMERA_Y_KOEF 1.23

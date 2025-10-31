@@ -1,15 +1,12 @@
-#ifndef MATHCALC_H
-#define MATHCALC_H
-
-#include "config.h"
-#include "mathCalc.h"
+#pragma once
+#include <Arduino.h>
 
 void calculateAngles(float x, float y, float z);
-int calculateBaseAnlge(float x, float y);
-int calculateFirstShoulderAngle(float z, float d, float rd, float l1, float l2, bool underTheBase);
-int calculateSecondShoulderAngle(float rd, float l1, float l2);
-bool areCoorsInvalid(Coors coors);
-bool areCoorsFixed(Coors coors, Coors prevCoors);
-bool areServoAnglesCanBeCalculated(Coors coors);
 
-#endif
+int  calculateBaseAnlge(float x, float z);
+int  calculateFirstShoulderAngle(float x, float z, float l1, float l2);
+int  calculateSecondShoulderAngle(float x, float z, float l1, float l2);
+
+bool areCoorsInvalid(Coors c);
+bool areCoorsFixed(Coors c, Coors p);
+bool areServoAnglesCanBeCalculated(Coors c);
