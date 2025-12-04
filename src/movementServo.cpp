@@ -1,6 +1,8 @@
 #include "config.h"
 #include "movementServo.h"
 
+
+
 void moveServos() {
   servo1.setGoalAngle(servoAngles[0]);
   servo2.setGoalAngle(servoAngles[1]);
