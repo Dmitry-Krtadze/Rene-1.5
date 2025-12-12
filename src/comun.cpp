@@ -1,56 +1,57 @@
-#include "config.h"
+#include "comun.h"
+#include <ArduinoJson.h>
 
-void parseCoordinates(const String &data) {
-  int c1 = data.indexOf(',');
-  int c2 = data.indexOf(',', c1 + 1);
-  int c3 = data.indexOf(',', c2 + 1);
-
-  if (c1 == -1 || c2 == -1 || c3 == -1) {
-    OPI_UART.println("ERR_FORMAT");
-    return;
-  }
-
-  String sx = data.substring(0, c1);
-  String sy = data.substring(c1 + 1, c2);
-  String sz = data.substring(c2 + 1, c3);
-  String sg = data.substring(c3 + 1);
-
-  posX = sx.toFloat();
-  posY = sy.toFloat();
-  posZ = sz.toFloat();
-  grip = sg.toInt();
-
-
-  String reply = "[INFO] CordsFromOrange:";
-  reply += posX;
-  reply += ",";
-  reply += posY;
-  reply += ",";
-  reply += posZ;
-  reply += ",";
-  reply += grip;
-
-  OPI_UART.println(reply);
+static bool copyStr(const char* src, char* dst, size_t dstSize) {
+  if (!dst || dstSize == 0) return false;
+  if (!src) { dst[0] = '\0'; return true; }
+  strncpy(dst, src, dstSize - 1);
+  dst[dstSize - 1] = '\0';
+  return true;
 }
 
-Coors readUART() {
+bool readJsonLine(String &line) {
   while (OPI_UART.available()) {
-    char c = OPI_UART.read();
-    if (c == '\n') {
-      parseCoordinates(inputBuffer);
-      inputBuffer = "";
-      break;
-    } else {
-      inputBuffer += c;
-    }
+    char c = (char)OPI_UART.read();
+    if (c == '\n') return true;
+    line += c;
+    if (line.length() > 700) { line = ""; return false; } // защита от мусора
+  }
+  return false;
+}
+
+bool parseVisionJson(const String &line, VisionCommand &out) {
+  out = {};
+  out.valid = false;
+
+  StaticJsonDocument<768> doc;
+  DeserializationError err = deserializeJson(doc, line);
+  if (err) return false;
+
+  out.status = doc["status"] | 0;
+  copyStr(doc["target"] | "", out.target, sizeof(out.target));
+  copyStr(doc["msg"] | "", out.msg, sizeof(out.msg));
+
+  // 200 + dual => есть координаты
+  if (out.status == 200 && strcmp(out.target, "dual") == 0) {
+    JsonObject b = doc["block_position"];
+    JsonObject c = doc["cup_position"];
+
+    out.block.x  = b["x"]  | NAN;
+    out.block.y  = b["y"]  | NAN;
+    out.block.z  = b["z"]  | NAN;
+    out.block.ry = b["Ry"] | NAN;
+
+    out.cup.x  = c["x"]  | NAN;
+    out.cup.y  = c["y"]  | NAN;
+    out.cup.z  = c["z"]  | NAN;
+    out.cup.ry = c["Ry"] | NAN;
+
+    out.valid = isfinite(out.block.x) && isfinite(out.block.y) && isfinite(out.block.z) &&
+                isfinite(out.cup.x)   && isfinite(out.cup.y)   && isfinite(out.cup.z);
+    return out.valid;
   }
 
-  return Coors{
-    posX,
-    posY,
-    posZ,  
-    posX,   
-    posY,   
-    posZ   
-  };
+  // 204/404/500 — координат нет, но команда валидна как статус
+  out.valid = (out.status == 204 || out.status == 404 || out.status == 500);
+  return out.valid;
 }

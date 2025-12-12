@@ -522,3 +522,12 @@ int OCServo::getCurrentPosition() {
     }
     return ((response.parameters[1] << 8) | response.parameters[0] & 0x00FF);
 }
+
+int OCServo::getTotalTurns() {
+    OCSResponse response = this->ocsRead(OCS_TURNS_VALUE, 2);
+    if (response.numberOfParameters != 2) {
+        return -1;
+    }
+    int value = ((response.parameters[1] << 8) | response.parameters[0] & 0x00FF);
+    return value;
+}

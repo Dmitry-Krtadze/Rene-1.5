@@ -89,6 +89,8 @@ class OCServo {
         long getOperationSpeed();
         bool reachedGoal();
 
+        int getTotalTurns();
+
         void begin(long baudrate=1000000);
         void printResponse(OCSResponse response);
 };
