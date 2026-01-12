@@ -36,14 +36,14 @@ bool parseVisionJson(const String &line, VisionCommand &out) {
     JsonObject b = doc["block_position"];
     JsonObject c = doc["cup_position"];
 
-    out.block.x  = b["x"]  | NAN;
-    out.block.y  = b["y"]  | NAN;
-    out.block.z  = b["z"]  | NAN;
+    out.block.x  = b["y"]  | NAN;
+    out.block.y  = b["z"]  | NAN;
+    out.block.z  = b["x"]  | NAN;
     out.block.ry = b["Ry"] | NAN;
 
-    out.cup.x  = c["x"]  | NAN;
-    out.cup.y  = c["y"]  | NAN;
-    out.cup.z  = c["z"]  | NAN;
+    out.cup.x  = c["y"]  | NAN;
+    out.cup.y  = c["z"]  | NAN;
+    out.cup.z  = c["x"]  | NAN;
     out.cup.ry = c["Ry"] | NAN;
 
     out.valid = isfinite(out.block.x) && isfinite(out.block.y) && isfinite(out.block.z) &&

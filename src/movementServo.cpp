@@ -4,9 +4,12 @@
 
 
 void moveServos() {
-  servo1.setGoalAngle(servoAngles[0]);
-  servo2.setGoalAngle(servoAngles[1]);
   servo3.setGoalAngle(servoAngles[2]);
+  delay(250);
+  servo2.setGoalAngle(servoAngles[1]);
+  delay(250);
+  servo1.setGoalAngle(servoAngles[0]);
+  
   
 }
 

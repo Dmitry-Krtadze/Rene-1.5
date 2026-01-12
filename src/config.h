@@ -40,6 +40,20 @@ extern int servoAngles[4];
 extern int currentAngles[4];
 extern int servs[4];
 extern bool change;
+// --- X compensation vs |Z| ---
+// Уменьшение |X| на (K * |Z|), с сохранением знака X
+#define XZ_COMP_ENABLE        1
+
+// Коэффициент: сколько "X" убирать на 1 единицу |Z|
+// Пример: 0.02 => при |Z|=100 уменьшит |X| на 2.0
+#define XZ_COMP_K             0.20f
+
+// Мёртвая зона по Z (пока |Z| меньше — не компенсируем)
+#define XZ_COMP_Z_DEADZONE    0.0f
+
+// Максимально допустимое уменьшение |X| (чтобы не переусердствовать)
+#define XZ_COMP_MAX_REDUCTION 9999.0f
+
 
 // -------- adapt to OCServo ----------
 #define SERVO_SCALE 2.0f  

@@ -84,6 +84,20 @@ void calibrationRene()
   }
 }
 
+
+void homing(){
+  
+  servo2.setGoalPosition(3800);
+  servo3.setGoalPosition(3700);
+  delay(500);
+  servo1.setGoalPosition(1700);
+  delay(2000);
+}
+
+
+
+static void gripClose() { servo4.setGoalPosition(3200); } 
+static void gripOpen() { servo4.setGoalPosition(4000); } 
 void setup()
 {
 
@@ -118,6 +132,10 @@ void setup()
 
   // calibrationRene();
   OPI_UART.println("[INFO]  Start complete");
+
+  homing();
+  gripOpen();
+  delay(2000);
 }
 
 void analyzeCors_MoveServo()
@@ -240,10 +258,8 @@ static void sendRobotStatus(const char *s)
 }
 
 
-static void gripClose() { servo4.setGoalPosition(3200); } 
-static void gripOpen() { servo4.setGoalPosition(4000); } 
 
-static bool waitArmSettled(uint32_t timeoutMs = 4000, uint16_t eps = 2, uint8_t stableNeed = 10)
+static bool waitArmSettled(uint32_t timeoutMs = 8000, uint16_t eps = 5, uint8_t stableNeed = 10)
 {
   uint32_t t0 = millis();
 
@@ -290,10 +306,9 @@ static bool goToXYZ(float x, float y, float z)
 
 int target = 0;
 
-void loop()
-{
 
-
+void mainloop(){
+  
   if (st == ST_READY)
   {
     if (readJsonLine(rxLine))
@@ -401,6 +416,9 @@ void loop()
     gripOpen();
     delay(600);
     sendRobotStatus("cube_released");
+    homing();
+
+
     st = ST_DONE;
     break;
 
@@ -415,15 +433,37 @@ void loop()
   }
 }
 
+void loop()
+{
+  // servo2.setGoalPosition(3000);
+  // servo3.setGoalPosition(3000);
+  // delay(500);
+  // servo1.setGoalPosition(4095/2);
+  // delay(2000);
+
+  // gripClose();
+  // delay(3000);
+  // gripOpen();
+  // delay(3000);
+
+  // OPI_UART.print("L0:");
+  // OPI_UART.print(servo1.getCurrentPosition());
+  // OPI_UART.print("   L1:");
+  // OPI_UART.print(servo2.getCurrentPosition());
+  // OPI_UART.print("   L3:");
+  // OPI_UART.println(servo3.getCurrentPosition());
+
+  // delay(2000);
+
+  mainloop();
+
+
+}
+
 // TestMoveOnCors();
 // changeGrip(grip);
 
-// OPI_UART.print("   L0:");
-// OPI_UART.print(servo1.getCurrentPosition());
-// OPI_UART.print("   L1:");
-// OPI_UART.print(servo2.getCurrentPosition());
-// OPI_UART.print("   L3:");
-// OPI_UART.print(servo3.getCurrentPosition());
+
 
 // OPI_UART.print("   BI:");
 // OPI_UART.print(biba);//servo1.getTotalTurns());
